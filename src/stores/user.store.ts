@@ -1,6 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { User } from '../models/user.model';
+import { createResettableStoreWithPersist } from './resettable-store-persist';
 
 interface UserStore {
   user: User | null;
@@ -8,15 +7,18 @@ interface UserStore {
   clearUser: () => void;
 }
 
-export const useUserStore = create<UserStore>()(
-  persist(
-    (set) => ({
-      user: null,
-      updateUser: (user) => set({ user }),
-      clearUser: () => set({ user: null }),
-    }),
-    {
-      name: 'user-storage',
-    }
-  )
+const initialState = {
+  user: null,
+};
+
+export const useUserStore = createResettableStoreWithPersist<UserStore>(
+  initialState,
+  (set) => ({
+    updateUser: (user: User | null) => set({ user }),
+    clearUser: () => set({ user: null }),
+  }),
+  {
+    name: 'user-storage',
+    partialize: (state) => ({ user: state.user }) as any,
+  }
 );

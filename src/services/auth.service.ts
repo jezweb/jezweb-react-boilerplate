@@ -92,7 +92,7 @@ export const authService = {
       LocalStorageControl.remove(CONST.REFRESH_TOKEN);
       LocalStorageControl.remove(CONST.USER_DATA);
       
-      userStore.clearUser();
+      userStore.reset();
       
       apiEventStore.sendEvent({
         type: ApiEventType.LOGOUT,
