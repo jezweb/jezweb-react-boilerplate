@@ -472,7 +472,7 @@ export const FormInput: React.FC<FormInputProps> = ({ name, label, ...props }) =
 };
 ```
 
-### 5. Event Callback Patterns
+### 5. HTTP Event Callback Patterns
 
 #### Cross-Component Communication
 ```typescript
@@ -501,18 +501,55 @@ export enum ApiEventType {
     DEFAULT,
 }
 
-// Component A - Sending events
-const handleAction = () => {
-  const apiEventStore = useApiEventStore.getState();
-  apiEventStore.sendEvent({
-    type: ApiEventType.USER_ACTION,
-    status: ApiEventStatus.COMPLETED,
-    message: 'Action completed successfully',
-    toast: true,
-  });
-};
+// Component A
+useEffect(() => {
+    authService.login(data);
+}, [])
 
-// Component B - Listening to events
+
+// Service HTTP CALL 
+export const authService = {
+  async login(data: LoginFormData): Promise<AuthResponse> {
+    const apiEventStore = useApiEventStore.getState();
+    const userStore = useUserStore.getState();
+    
+    apiEventStore.sendEvent({
+      type: ApiEventType.LOGIN,
+      status: ApiEventStatus.IN_PROGRESS,
+      spinner: true,
+    });
+    
+    try {
+      const response = await axiosApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
+      
+      LocalStorageControl.set(CONST.ACCESS_TOKEN, response.data.accessToken);
+      LocalStorageControl.set(CONST.REFRESH_TOKEN, response.data.refreshToken);
+      LocalStorageControl.setJSON(CONST.USER_DATA, response.data.user);
+      
+      userStore.updateUser(response.data.user);
+      
+      apiEventStore.sendEvent({
+        type: ApiEventType.LOGIN,
+        status: ApiEventStatus.COMPLETED,
+        message: 'Login successful',
+        spinner: false,
+        toast: true,
+      });
+      
+      return response.data;
+    } catch (error: any) {
+      apiEventStore.sendEvent({
+        type: ApiEventType.LOGIN,
+        status: ApiEventStatus.ERROR,
+        message: error?.response?.data?.message || 'Login failed',
+        spinner: false,
+        toast: true,
+      });
+      throw error;
+    }
+  },
+
+// Component A - Listening to events
 
 const apiEventStore = useApiEventStore();
 
@@ -537,8 +574,9 @@ const createEventStatusHandleMap = (
           [ApiEventStatus.COMPLETED]: () => {
             // Event type handler map
             const eventTypeHandleMap: { [key in ApiEventType]?: () => void } = {
-              [ApiEventType.GET_WORDPRESS_CONFERENCE_COMPLETE_ASSETS]: async () => {
-
+              [ApiEventType.LOGIN]: async () => {
+                 const userStore = useUserStore.getState();
+                 //handle userStore.user
               },
               [ApiEventType.ANOTHER_EVENT_TYPE]: async () => {
               
