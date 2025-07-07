@@ -11,7 +11,7 @@ import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { Button } from 'primereact/button';
 import { useApiEventStore, ApiEventStatus } from '../../../stores/api-event.store';
 
-const validationSchema = yup.object({
+const validationSchema = yup.object().shape({
   email: yup
     .string()
     .required('Email is required')
@@ -27,7 +27,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const currentEvent = useApiEventStore((state) => state.currentEvent);
   
-  const methods = useForm<LoginFormData>({
+  const methods = useForm({
     resolver: yupResolver(validationSchema),
     mode: 'onChange',
     defaultValues: {
@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={methods.handleSubmit(onSubmit as any)} className="space-y-6">
           <FormInput
             name="email"
             label="Email address"

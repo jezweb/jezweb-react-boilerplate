@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 interface PublicLayoutProps {
   children: React.ReactNode;
@@ -14,9 +15,9 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ children }) => {
               <h1 className="text-xl font-semibold">React Boilerplate</h1>
             </div>
             <nav className="flex space-x-4">
-              <a href="/" className="text-gray-700 hover:text-gray-900">Home</a>
-              <a href="/about" className="text-gray-700 hover:text-gray-900">About</a>
-              <a href="/login" className="text-gray-700 hover:text-gray-900">Login</a>
+              <Link to="/" className="text-gray-700 hover:text-gray-900">Home</Link>
+              <Link to="/about" className="text-gray-700 hover:text-gray-900">About</Link>
+              <Link to="/login" className="text-gray-700 hover:text-gray-900">Login</Link>
             </nav>
           </div>
         </div>

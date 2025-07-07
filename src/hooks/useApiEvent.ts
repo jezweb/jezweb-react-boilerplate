@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from 'react';
 import { useApiEventStore, ApiEvent, ApiEventStatus, ApiEventType } from '../stores/api-event.store';
-import { toast } from 'primereact/toast';
 
 interface EventHandlers {
   [key: string]: (event: ApiEvent) => void;

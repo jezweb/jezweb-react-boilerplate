@@ -11,7 +11,7 @@ import { FormCheckbox } from '../../../components/forms/FormCheckbox';
 import { Button } from 'primereact/button';
 import { useApiEventStore, ApiEventStatus } from '../../../stores/api-event.store';
 
-const validationSchema = yup.object({
+const validationSchema = yup.object().shape({
   firstName: yup
     .string()
     .required('First name is required')
@@ -38,14 +38,15 @@ const validationSchema = yup.object({
     .oneOf([yup.ref('password')], 'Passwords must match'),
   acceptTerms: yup
     .boolean()
-    .oneOf([true], 'You must accept the terms and conditions'),
+    .oneOf([true], 'You must accept the terms and conditions')
+    .required(),
 });
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const currentEvent = useApiEventStore((state) => state.currentEvent);
   
-  const methods = useForm<RegisterFormData>({
+  const methods = useForm({
     resolver: yupResolver(validationSchema),
     mode: 'onChange',
     defaultValues: {
@@ -72,7 +73,7 @@ const RegisterPage: React.FC = () => {
   return (
     <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={methods.handleSubmit(onSubmit as any)} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <FormInput
               name="firstName"
