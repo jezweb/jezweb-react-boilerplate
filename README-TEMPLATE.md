@@ -501,11 +501,6 @@ export enum ApiEventType {
     DEFAULT,
 }
 
-// Component A
-useEffect(() => {
-    authService.login(data);
-}, [])
-
 
 // Service HTTP CALL 
 export const authService = {
@@ -554,6 +549,7 @@ export const authService = {
 const apiEventStore = useApiEventStore();
 
 useEffect(() => {
+      authService.login(data);
   const unsubscribe = apiEventStore.subscribe((event) => {
             if (!event) return;
             // Use the factory pattern to handle different event statuses
