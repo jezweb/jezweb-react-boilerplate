@@ -1,8 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUserStore } from '../../../stores/user.store';
+import { ApiEvent, ApiEventStatus, ApiEventType, useApiEventStore } from '@/stores/api-event.store';
+import { User } from '@/models/user.model';
 
 export const DashboardPage: React.FC = () => {
-  const user = useUserStore((state) => state.user);
+
+  const [user, setUser] = useState<User>(null);
+
+  const apiEventStore = useApiEventStore();
+
+  useEffect(() => {
+    const unsubscribe = apiEventStore.subscribe((event) => {
+              if (!event) return;
+              // Use the factory pattern to handle different event statuses
+              const eventStatusHandleMap = createEventStatusHandleMap(event);
+              const handleEvent = eventStatusHandleMap[event.status] || (() => {});
+              handleEvent();
+            });
+            return () => {
+              unsubscribe(); 
+
+            };
+  }, []);
+
+  const createEventStatusHandleMap = (
+        apiEvent: ApiEvent, 
+      ): { [key in ApiEventStatus]?: () => void } => {
+        return {
+          [ApiEventStatus.COMPLETED]: () => {
+            // Event type handler map
+            const eventTypeHandleMap: { [key in ApiEventType]?: () => void } = {
+              [ApiEventType.LOGIN]: async () => {
+                const userStore = useUserStore.getState();
+                setUser(userStore.user);
+              },
+         
+            };
+            const handleEventType = eventTypeHandleMap[apiEvent.type] || (() => {});
+            handleEventType();
+          },
+          [ApiEventStatus.ERROR]: () => { },
+          [ApiEventStatus.IN_PROGRESS]: () => {
+          },
+          [ApiEventStatus.DEFAULT]: () => {
+          }
+        };
+  };
 
   return (
     <div className="px-4 py-6 sm:px-0">
