@@ -1,0 +1,20 @@
+services:
+  reactjs:
+    build:
+      dockerfile: Dockerfile
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_API_AUTH=${VITE_API_AUTH}
+      - VITE_ACCESS_HEADER=${VITE_ACCESS_HEADER}
+      - VITE_ACCESS_TOKEN=${VITE_ACCESS_TOKEN}
+      - VITE_SECRET_KEY=${VITE_SECRET_KEY}
+      - CHOKIDAR_USEPOLLING=true
+    command: >
+            bash -c "npm run dev -- --host 0.0.0.0"
+    container_name: jezweb-react-boilerplate
+    ports:
+      - "4201:4201"
+
