@@ -287,44 +287,91 @@ export enum ApiEventType {
     DEFAULT,
 }
 
-
-// src/services/user.service.ts
-export const userService = {
-  async getUsers(): Promise<User[]> {
-    const eventType = ApiEventType.GET_USERS;
+export const authService = {
+  async login(data: LoginFormData): Promise<AuthResponse> {
     const apiEventStore = useApiEventStore.getState();
+    const userStore = useUserStore.getState();
     
-    // Send loading event
     apiEventStore.sendEvent({
-      type: eventType,
+      type: ApiEventType.LOGIN,
       status: ApiEventStatus.IN_PROGRESS,
       spinner: true,
     });
     
     try {
-      const response = await axiosApiClient.get('/users');
+      const response = await axiosApiClient.post<AuthResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
       
-      // Send success event
+      LocalStorageControl.set(CONST.ACCESS_TOKEN, response.data.accessToken);
+      LocalStorageControl.set(CONST.REFRESH_TOKEN, response.data.refreshToken);
+      LocalStorageControl.setJSON(CONST.USER_DATA, response.data.user);
+      
+      userStore.updateUser(response.data.user);
+      
       apiEventStore.sendEvent({
-        type: eventType,
+        type: ApiEventType.LOGIN,
         status: ApiEventStatus.COMPLETED,
+        message: 'Login successful',
         spinner: false,
+        toast: true,
       });
       
       return response.data;
-    } catch (error) {
-      // Send error event
+    } catch (error: any) {
       apiEventStore.sendEvent({
-        type: eventType,
+        type: ApiEventType.LOGIN,
         status: ApiEventStatus.ERROR,
-        message: 'Failed to fetch users',
+        message: error?.response?.data?.message || 'Login failed',
         spinner: false,
         toast: true,
       });
       throw error;
     }
   },
-};
+
+// Component A - Listening to events
+
+const apiEventStore = useApiEventStore();
+
+useEffect(() => {
+  authService.login(data);
+  const unsubscribe = apiEventStore.subscribe((event) => {
+            if (!event) return;
+            // Use the factory pattern to handle different event statuses
+            const eventStatusHandleMap = createEventStatusHandleMap(event);
+            const handleEvent = eventStatusHandleMap[event.status] || (() => {});
+            handleEvent();
+          });
+          return () => {
+            unsubscribe(); 
+
+          };
+}, []);
+
+const createEventStatusHandleMap = (
+        apiEvent: ApiEvent, 
+      ): { [key in ApiEventStatus]?: () => void } => {
+        return {
+          [ApiEventStatus.COMPLETED]: () => {
+            // Event type handler map
+            const eventTypeHandleMap: { [key in ApiEventType]?: () => void } = {
+              [ApiEventType.LOGIN]: async () => {
+                 const userStore = useUserStore.getState();
+                 //handle userStore.user
+              },
+              [ApiEventType.ANOTHER_EVENT_TYPE]: async () => {
+              
+              },
+            };
+            const handleEventType = eventTypeHandleMap[apiEvent.type] || (() => {});
+            handleEventType();
+          },
+          [ApiEventStatus.ERROR]: () => { },
+          [ApiEventStatus.IN_PROGRESS]: () => {
+          },
+          [ApiEventStatus.DEFAULT]: () => {
+          }
+        };
+  };
 ```
 
 ### 3. Routing with Guards
@@ -549,7 +596,7 @@ export const authService = {
 const apiEventStore = useApiEventStore();
 
 useEffect(() => {
-      authService.login(data);
+  authService.login(data);
   const unsubscribe = apiEventStore.subscribe((event) => {
             if (!event) return;
             // Use the factory pattern to handle different event statuses
